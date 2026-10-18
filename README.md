@@ -1,3 +1,2 @@
-# R[index.html](https://github.com/user-attachments/files/33616200/index.html)
-BN-Musiq
+RBN-MUSIQ 
 We are here for upcoming artist 
