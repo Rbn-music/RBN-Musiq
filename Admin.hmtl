@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>RBN-MUSIQ Admin</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #090d18;
+  color: white;
+}
+
+header {
+  background: linear-gradient(135deg, #00d084, #007c62);
+  padding: 25px 15px;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+header p {
+  margin-bottom: 0;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 16px;
+}
+
+.card {
+  background: #151c2e;
+  padding: 18px;
+  margin: 15px 0;
+  border-radius: 12px;
+  border: 1px solid #28334c;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.stat {
+  background: #202a40;
+  padding: 18px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.stat h2 {
+  color: #00e5a0;
+  margin: 8px 0;
+}
+
+input, button {
+  width: 100%;
+  padding: 13px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 7px;
+  font-size: 15px;
+}
+
+input {
+  background: white;
+  color: #111;
+}
+
+button {
+  background: #00d084;
+  color: #07150f;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #303c56;
+  color: white;
+}
+
+.song {
+  background: #202a40;
+  margin-top: 12px;
+  padding: 15px;
+  border-radius: 9px;
+  overflow-wrap: anywhere;
+}
+
+.song h3 {
+  color: #00e5a0;
+}
+
+.small {
+  font-size: 13px;
+  color: #b9c3d8;
+}
+
+#message {
+  overflow-wrap: anywhere;
+}
+
+footer {
+  text-align: center;
+  color: #aab3c7;
+  padding: 25px;
+}
+
+[hidden] {
+  display: none !important;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🎵 RBN-MUSIQ</h1>
+  <p>ADMIN CONTROL PANEL</p>
+</header>
+
+<div class="container">
+
+  <section class="card" id="loginBox">
+    <h2>🔐 Admin Login</h2>
+    <p>Lowani ndi akaunti yanu ya RBN-MUSIQ.</p>
+
+    <form id="loginForm">
+      <input
+        type="email"
+        id="email"
+        placeholder="Email address"
+        required
+      >
+
+      <input
+        type="password"
+        id="password"
+        placeholder="Password"
+        required
+      >
+
+      <button type="submit">LOGIN</button>
+    </form>
+
+    <p id="message"></p>
+  </section>
+
+  <section id="dashboard" hidden>
+
+    <div class="card">
+      <h2>📊 Dashboard Overview</h2>
+
+      <div class="stats">
+        <div class="stat">
+          <p>Nyimbo Zomwe Zikuoneka</p>
+          <h2 id="totalSongs">—</h2>
+        </div>
+
+        <div class="stat">
+          <p>Upload Fee</p>
+          <h2>MK500</h2>
+        </div>
+      </div>
+
+      <p class="small">
+        Chiwerengerochi chimadalira nyimbo zomwe database
+        imalola akaunti yanu kuona.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>🔎 Search Songs</h2>
+
+      <input
+        type="search"
+        id="search"
+        placeholder="Search artist or song..."
+      >
+
+      <button id="refresh">🔄 REFRESH SONGS</button>
+      <button id="logout" class="secondary">LOG OUT</button>
+    </div>
+
+    <div class="card">
+      <h2>🎶 Submitted Songs</h2>
+      <div id="songsList">Dinani Refresh Songs.</div>
+    </div>
+
+  </section>
+</div>
+
+<footer>
+  <p>RBN-MUSIQ © 2026</p>
+  <p>Music • Artists • Entertainment</p>
+</footer>
+
+<script>
+const SUPABASE_URL =
+  "https://ddkoesjthrxznuposjpg.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_GDOXodlS-3GueuVx8YTR4w_di-9hCfm";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const loginBox = document.getElementById("loginBox");
+const dashboard = document.getElementById("dashboard");
+const message = document.getElementById("message");
+const songsList = document.getElementById("songsList");
+
+let allSongs = [];
+
+document.getElementById("loginForm").addEventListener(
+  "submit",
+  async function(event) {
+    event.preventDefault();
+
+    message.textContent = "Checking login...";
+
+    const email =
+      document.getElementById("email").value.trim();
+
+    const password =
+      document.getElementById("password").value;
+
+    const { error } = await db.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (error) {
+      message.textContent =
+        "Login yalephera: " + error.message;
+      return;
+    }
+
+    loginBox.hidden = true;
+    dashboard.hidden = false;
+
+    await loadSongs();
+  }
+);
+
+async function loadSongs() {
+  songsList.textContent = "Loading songs...";
+
+  const { data, error } = await db
+    .from("song_submissions")
+    .select(
+      "id,artist,title,genre,status,payment_status,fee_mwk,created_at"
+    )
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    songsList.textContent =
+      "Talephera kuwerenga nyimbo. " +
+      "Onani Supabase permissions. " + error.message;
+
+    document.getElementById("totalSongs").textContent = "—";
+    return;
+  }
+
+  allSongs = data || [];
+
+  document.getElementById("totalSongs").textContent =
+    allSongs.length;
+
+  renderSongs();
+}
+
+function renderSongs() {
+  const query = document
+    .getElementById("search")
+    .value
+    .trim()
+    .toLowerCase();
+
+  const filtered = allSongs.filter(song => {
+    const title = (song.title || "").toLowerCase();
+    const artist = (song.artist || "").toLowerCase();
+
+    return title.includes(query) || artist.includes(query);
+  });
+
+  songsList.replaceChildren();
+
+  if (filtered.length === 0) {
+    songsList.textContent = "Palibe nyimbo zomwe zikuoneka.";
+    return;
+  }
+
+  filtered.forEach(song => {
+    const card = document.createElement("div");
+    card.className = "song";
+
+    const title = document.createElement("h3");
+    title.textContent = song.title || "Untitled";
+
+    const artist = document.createElement("p");
+    artist.textContent =
+      "Artist: " + (song.artist || "Unknown");
+
+    const genre = document.createElement("p");
+    genre.textContent =
+      "Genre: " + (song.genre || "Not provided");
+
+    const status = document.createElement("p");
+    status.textContent =
+      "Song status: " + (song.status || "pending");
+
+    const payment = document.createElement("p");
+    payment.textContent =
+      "Payment: " + (song.payment_status || "pending");
+
+    const fee = document.createElement("p");
+    fee.textContent =
+      "Upload fee: MK " + (song.fee_mwk ?? 500);
+
+    card.append(title, artist, genre, status, payment, fee);
+
+    songsList.appendChild(card);
+  });
+}
+
+document.getElementById("refresh").addEventListener(
+  "click",
+  loadSongs
+);
+
+document.getElementById("search").addEventListener(
+  "input",
+  renderSongs
+);
+
+document.getElementById("logout").addEventListener(
+  "click",
+  async function() {
+    await db.auth.signOut();
+
+    dashboard.hidden = true;
+    loginBox.hidden = false;
+
+    songsList.replaceChildren();
+    message.textContent = "Mwatuluka bwino.";
+  }
+);
+
+async function checkSession() {
+  const { data } = await db.auth.getSession();
+
+  if (data.session) {
+    loginBox.hidden = true;
+    dashboard.hidden = false;
+    await loadSongs();
+  }
+}
+
+checkSession();
+</script>
+
+</body>
+</html>￼Enter
