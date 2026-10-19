@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RBN-MUSIQ | Admin Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #10121b;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    header {
+      text-align: center;
+      padding: 20px;
+      background: #1c2030;
+      border-radius: 12px;
+      border-bottom: 3px solid #00e5a8;
+    }
+    h1 { color: #00e5a8; margin-bottom: 5px; }
+    .box {
+      max-width: 650px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #1c2030;
+      border-radius: 12px;
+    }
+    input, button {
+      width: 100%;
+      padding: 13px;
+      margin: 8px 0;
+      border-radius: 7px;
+      border: none;
+      font-size: 15px;
+    }
+    input { background: #fff; color: #111; }
+    button {
+      background: #00e5a8;
+      color: #10121b;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .secondary { background: #343a50; color: white; }
+    .song {
+      padding: 15px;
+      margin: 12px 0;
+      background: #292e40;
+      border-radius: 8px;
+      overflow-wrap: anywhere;
+    }
+    .status { color: #00e5a8; }
+    #message { overflow-wrap: anywhere; }
+    .small { color: #c5cada; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎵 RBN-MUSIQ</h1>
+  <p>ADMIN DASHBOARD</p>
+  <p class="small">Manage music submissions</p>
+</header>
+
+<section class="box" id="loginBox">
+  <h2>Admin Login</h2>
+  <p>Lowani pogwiritsa ntchito akaunti ya Supabase yomwe mwalembetsa.</p>
+  <form id="loginForm">
+    <input id="email" type="email" placeholder="Email address" required>
+    <input id="password" type="password" placeholder="Password" required>
+    <button type="submit">LOGIN</button>
+  </form>
+  <p id="message"></p>
+</section>
+
+<section￼Enter
